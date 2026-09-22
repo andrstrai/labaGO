@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
 type students struct {
@@ -35,19 +37,48 @@ func record() {
 	}
 	f.WriteString(string(info))
 }
+
+func print_all() {
+	file, err := os.Open("Base.txt")
+	if err != nil {
+		fmt.Println("Ошибка открытия:", err)
+		return
+	}
+	defer file.Close()
+
+	var lines []string
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		lines = append(lines, scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		fmt.Println("Ошибка чтения:", err)
+	}
+
+	for _, line := range lines {
+		line := strings.Split(line, "/")
+		fmt.Printf("---\nИмя студента: %s\nДата рождения: %s\nИнститут: %s\nСтипендия: %s\nСредний балл: %s\n---\n",
+			line[0], line[1], line[2], line[3], line[4])
+
+	}
+}
+
 func main() {
 	var a int64
 
 	for {
 		fmt.Println("1 - Показать список всех ")
 		fmt.Println("2 - Запись студента в базу данных")
+		fmt.Println("0 - Завершить работу")
 		fmt.Println("Выберите пункт из меню управления: ")
 		fmt.Scan(&a)
 		if a == 1 {
-			record()
-		}
-		if a == 0 {
+			print_all()
+		} else if a == 0 {
 			break
+		} else if a == 2 {
+			record()
 		}
 	}
 
