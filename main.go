@@ -35,7 +35,7 @@ func record() {
 	if e != nil {
 		fmt.Println("Ошибка чтения")
 	}
-	f.WriteString(string(info))
+	f.WriteString(string(info) + "\n")
 }
 
 func print_all() {
@@ -56,11 +56,13 @@ func print_all() {
 		fmt.Println("Ошибка чтения:", err)
 	}
 
-	for _, line := range lines {
-		line := strings.Split(line, "/")
-		fmt.Printf("---\nИмя студента: %s\nДата рождения: %s\nИнститут: %s\nСтипендия: %s\nСредний балл: %s\n---\n",
-			line[0], line[1], line[2], line[3], line[4])
-
+	for i, line := range lines {
+		corr_line := strings.Split(line, "/")
+		if i == 0 {
+			fmt.Println("---")
+		}
+		fmt.Printf("Имя студента: %s\nДата рождения: %s\nИнститут: %s\nСтипендия: %s\nСредний балл: %s\n---\n",
+			corr_line[0], corr_line[1], corr_line[2], corr_line[3], corr_line[4])
 	}
 }
 
