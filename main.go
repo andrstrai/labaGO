@@ -35,7 +35,12 @@ func record() {
 	if e != nil {
 		fmt.Println("Ошибка чтения")
 	}
-	f.WriteString(string(info))
+	if len("Base.txt") == 0 {
+		f.WriteString(string(info))
+	} else {
+		f.WriteString("\n" + string(info))
+	}
+
 }
 
 func print_all() {
@@ -60,7 +65,6 @@ func print_all() {
 		line := strings.Split(line, "/")
 		fmt.Printf("---\nИмя студента: %s\nДата рождения: %s\nИнститут: %s\nСтипендия: %s\nСредний балл: %s\n---\n",
 			line[0], line[1], line[2], line[3], line[4])
-
 	}
 }
 
