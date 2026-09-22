@@ -13,6 +13,7 @@ type students struct {
 	GPA          float64
 }
 
+// Странная функция
 func record() {
 	var name, data, inst string
 	var sti, GPA float64
