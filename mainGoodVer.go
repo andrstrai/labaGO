@@ -79,6 +79,23 @@ func print_all(student []students) {
 	fmt.Println("---")
 }
 
+// функция для сохранения измененнного слайса в файл
+func save_to_file(students_list []students) error {
+	f, err := os.OpenFile("Base.txt", os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	w := bufio.NewWriter(f)
+	for _, student := range students_list {
+		fmt.Fprintf(w, "%s/%s/%s/%f/%f\n",
+			student.name, student.databirthday, student.institute, student.stipend, student.GPA)
+	}
+	fmt.Println("Изменения сохранены!")
+	return w.Flush() // обязательно!
+}
+
 func main() {
 	var a int64
 	all_students := []students{}
@@ -114,6 +131,7 @@ func main() {
 		fmt.Println("1 - Показать список всех ")
 		fmt.Println("2 - Запись студента в базу данных")
 		fmt.Println("3 - Сортировать студентов по среднему баллу")
+		fmt.Println("4 - Сохранить изменения в файл")
 		fmt.Println("0 - Завершить работу")
 		fmt.Println("Выберите пункт из меню управления: ")
 		fmt.Scan(&a)
@@ -125,6 +143,8 @@ func main() {
 			record(&all_students)
 		} else if a == 3 {
 			sort_by_grades(all_students)
+		} else if a == 4 {
+			save_to_file(all_students)
 		}
 	}
 }
