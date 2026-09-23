@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -23,7 +24,7 @@ func (st students) ToString() string {
 }
 
 // Функция записи
-func record(student []students) {
+func record(student *[]students) {
 	var name, data, inst string
 	var sti, GPA float64
 	fmt.Println("Укажите имя студента: ")
@@ -38,7 +39,7 @@ func record(student []students) {
 	fmt.Scan(&GPA)
 	info := []byte(name + "/" + data + "/" + inst + "/" + fmt.Sprint(sti) + "/" + fmt.Sprint(GPA))
 	f, e := os.OpenFile("Base.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	student = append(student, students{name, data, inst, sti, GPA})
+	*student = append(*student, students{name, data, inst, sti, GPA})
 	if e != nil {
 		fmt.Println("Ошибка чтения")
 	}
@@ -47,6 +48,20 @@ func record(student []students) {
 	} else {
 		f.WriteString("\n" + string(info))
 	}
+}
+
+func sort_by_grades(students_list []students) {
+	slices.SortFunc(students_list, func(a, b students) int {
+		switch {
+		case a.GPA < b.GPA:
+			return 1
+		case a.GPA > b.GPA:
+			return -1
+		default:
+			return 0
+		}
+	})
+	fmt.Println("Данные отсортированы!")
 }
 
 // Вспомогательная функция для ввода и загрузки информации
@@ -59,11 +74,13 @@ func print_all(student []students) {
 			fmt.Println("---")
 		}
 	}
+	fmt.Println("Всего студентов:", len(student))
+	fmt.Println("---")
 }
 
 func main() {
 	var a int64
-	split := []students{}
+	all_students := []students{}
 
 	file, err := os.Open("Base.txt")
 	if err != nil {
@@ -89,7 +106,7 @@ func main() {
 			fmt.Println("Ошибка чтения данных!", err)
 			return
 		}
-		split = append(split, students{line[0], line[1], line[2], sti, gpa})
+		all_students = append(all_students, students{line[0], line[1], line[2], sti, gpa})
 	}
 
 	for {
@@ -100,13 +117,13 @@ func main() {
 		fmt.Println("Выберите пункт из меню управления: ")
 		fmt.Scan(&a)
 		if a == 1 {
-			print_all(split)
+			print_all(all_students)
 		} else if a == 0 {
 			break
 		} else if a == 2 {
-			record(split)
+			record(&all_students)
 		} else if a == 3 {
-			// напишите пж вывод по возрастанию среднего балла желательно в виде таблицы
+			sort_by_grades(all_students)
 		}
 	}
 }
