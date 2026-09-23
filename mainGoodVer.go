@@ -81,7 +81,7 @@ func sort_by_stipend(students_list []students) {
 	fmt.Println("Данные отсортированы!")
 }
 
-// функция для вывода студентов
+// функция для вывода студентов списком
 func print_all(student []students) {
 	for i := 0; i < len(student); i++ {
 		if i == 0 {
