@@ -50,6 +50,7 @@ func record(student *[]students) {
 	}
 }
 
+// сортирует слайс студентов по среднему баллу по убыванию
 func sort_by_grades(students_list []students) {
 	slices.SortFunc(students_list, func(a, b students) int {
 		switch {
