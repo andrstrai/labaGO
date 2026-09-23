@@ -51,13 +51,28 @@ func record(student *[]students) {
 	}
 }
 
-// сортирует слайс студентов по среднему баллу по убыванию
+// функция, которая сортирует слайс студентов по среднему баллу по убыванию
 func sort_by_grades(students_list []students) {
 	slices.SortFunc(students_list, func(a, b students) int {
 		switch {
 		case a.GPA < b.GPA:
 			return 1
 		case a.GPA > b.GPA:
+			return -1
+		default:
+			return 0
+		}
+	})
+	fmt.Println("Данные отсортированы!")
+}
+
+// функция, которая сортирует слайс студентов по размеру стипендии по убыванию
+func sort_by_stipend(students_list []students) {
+	slices.SortFunc(students_list, func(a, b students) int {
+		switch {
+		case a.stipend < b.stipend:
+			return 1
+		case a.stipend > b.stipend:
 			return -1
 		default:
 			return 0
@@ -130,22 +145,25 @@ func main() {
 	}
 
 	for {
-		fmt.Println("1 - Показать список всех ")
+		fmt.Println("1 - Показать список всех студентов")
 		fmt.Println("2 - Запись студента в базу данных")
-		fmt.Println("3 - Сортировать студентов по среднему баллу")
-		fmt.Println("4 - Сохранить изменения в файл")
+		fmt.Println("3 - Сортировать студентов по среднему баллу (по убыванию)")
+		fmt.Println("4 - Сортировать студентов по размеру стипендии (по убыванию)")
+		fmt.Println("5 - Сохранить изменения в файл")
 		fmt.Println("0 - Завершить работу")
 		fmt.Println("Выберите пункт из меню управления: ")
 		fmt.Scan(&a)
-		if a == 1 {
-			print_all(all_students)
-		} else if a == 0 {
+		if a == 0 {
 			break
+		} else if a == 1 {
+			print_all(all_students)
 		} else if a == 2 {
 			record(&all_students)
 		} else if a == 3 {
 			sort_by_grades(all_students)
 		} else if a == 4 {
+			sort_by_stipend(all_students)
+		} else if a == 5 {
 			save_to_file(all_students)
 		}
 	}
