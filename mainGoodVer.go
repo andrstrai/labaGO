@@ -17,6 +17,7 @@ type students struct {
 	GPA          float64
 }
 
+// метод для вывода красивой строки стуктуры
 func (st students) ToString() string {
 	return fmt.Sprintf("Имя студента: %s\nДата рождения: %s\n"+
 		"Институт: %s\nСтипендия: %f\nСредний балл: %f",
@@ -96,6 +97,7 @@ func save_to_file(students_list []students) error {
 	return w.Flush() // обязательно!
 }
 
+// основная функция
 func main() {
 	var a int64
 	all_students := []students{}
