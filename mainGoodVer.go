@@ -16,6 +16,12 @@ type students struct {
 	GPA          float64
 }
 
+func (st students) ToString() string {
+	return fmt.Sprintf("Имя студента: %s\nДата рождения: %s\n"+
+		"Институт: %s\nСтипендия: %f\nСредний балл: %f",
+		st.name, st.databirthday, st.institute, st.stipend, st.GPA)
+}
+
 // Функция записи
 func record(student []students) {
 	var name, data, inst string
@@ -49,8 +55,8 @@ func print_all(student []students) {
 		if i == 0 {
 			fmt.Println("---")
 		} else {
-			fmt.Printf("Имя студента: %s\nДата рождения: %s\nИнститут: %s\nСтипендия: %s\nСредний балл: %s\n---\n",
-				student[i].name, student[i].databirthday, student[i].institute, fmt.Sprint(student[i].stipend), fmt.Sprint(student[i].GPA))
+			fmt.Println(student[i].ToString())
+			fmt.Println("---")
 		}
 	}
 }
