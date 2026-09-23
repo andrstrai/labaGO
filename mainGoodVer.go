@@ -94,7 +94,7 @@ func save_to_file(students_list []students) error {
 			student.name, student.databirthday, student.institute, student.stipend, student.GPA)
 	}
 	fmt.Println("Изменения сохранены!")
-	return w.Flush() // обязательно!
+	return w.Flush()
 }
 
 // основная функция
