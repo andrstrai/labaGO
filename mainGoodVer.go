@@ -23,7 +23,7 @@ func (st students) ToString() string {
 		st.name, st.databirthday, st.institute, st.stipend, st.GPA)
 }
 
-// Функция записи
+// функция добавления студента в слайс
 func record(student *[]students) {
 	var name, data, inst string
 	var sti, GPA float64
@@ -65,7 +65,7 @@ func sort_by_grades(students_list []students) {
 	fmt.Println("Данные отсортированы!")
 }
 
-// Вспомогательная функция для ввода и загрузки информации
+// функция для вывода студентов
 func print_all(student []students) {
 	for i := 0; i < len(student); i++ {
 		if i == 0 {
