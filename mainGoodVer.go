@@ -99,6 +99,7 @@ func print_all(student []students) {
 func save_to_file(students_list []students) error {
 	f, err := os.OpenFile("Base.txt", os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
+		fmt.Println("Ошибка записи!")
 		return err
 	}
 	defer f.Close()
