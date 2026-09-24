@@ -96,11 +96,9 @@ func print_all(student []students) {
 	for i := 0; i < len(student); i++ {
 		if i == 0 {
 			fmt.Println("---")
-			fmt.Println(student[i].ToString())
-		} else {
-			fmt.Println(student[i].ToString())
-			fmt.Println("---")
 		}
+		fmt.Println(student[i].ToString())
+		fmt.Println("---")
 	}
 	fmt.Println("Всего студентов:", len(student))
 	fmt.Println("---")
