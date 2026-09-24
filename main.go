@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -174,50 +175,57 @@ func save_to_file(students_list []students) error {
 	return nil
 }
 
+// функция для очистки экрана (работает и на Windows, и на macOS/Linux)
+func clear_screen() {
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/c", "cls")
+	} else {
+		cmd = exec.Command("clear")
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Run()
+}
+
 // основная функция
 func main() {
-
 	all_students := []students{}
 
 	file, err := os.Open("Base.txt")
 	if err != nil {
-		os.Create("Base.txt")
+		f, err := os.Create("Base.txt")
+		if err != nil {
+			fmt.Println("Не удалось создать файл:", err)
+			return
+		}
+		f.Close()
 	} else {
-		var lines []string
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
-			lines = append(lines, scanner.Text())
+			fields := strings.Split(scanner.Text(), "/")
+			if len(fields) < 6 {
+				continue
+			}
+			id, err1 := strconv.Atoi(fields[0])
+			sti, err2 := strconv.ParseFloat(fields[4], 64)
+			gpa, err3 := strconv.ParseFloat(fields[5], 64)
+			if err1 != nil || err2 != nil || err3 != nil {
+				fmt.Println("Пропущена некорректная строка:", scanner.Text())
+				continue
+			}
+			all_students = append(all_students, students{id, fields[1], fields[2], fields[3], sti, gpa})
 		}
-
 		if err := scanner.Err(); err != nil {
 			fmt.Println("Ошибка чтения:", err)
 		}
-		for _, line := range lines {
-			line := strings.Split(line, "/")
-			if len(line) < 5 {
-				continue
-			} else {
-				id, err := strconv.ParseInt(line[0], 10, 0)
-				sti, err := strconv.ParseFloat(line[4], 64)
-				gpa, err := strconv.ParseFloat(line[5], 64)
-				if err != nil {
-					fmt.Println("Ошибка чтения данных!", err)
-					return
-				}
-				all_students = append(all_students, students{int(id), line[1], line[2], line[3], sti, gpa})
-			}
-		}
+		file.Close()
 	}
 
-	defer file.Close()
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Println("Для начала работы пожалуйста, нажмите Enter...")
 		reader.ReadString('\n')
-
-		cmd := exec.Command("cmd", "/c", "cls")
-		cmd.Stdout = os.Stdout
-		cmd.Run()
+		clear_screen()
 
 		fmt.Println("Меню команд:")
 		fmt.Println("1 - Показать список всех студентов")
@@ -229,25 +237,31 @@ func main() {
 		fmt.Println("Выберите пункт из меню управления: ")
 
 		input, _ := reader.ReadString('\n')
-		input = strings.TrimSpace(input) // Убираем \n и пробелы
+		input = strings.TrimSpace(input)
 
-		a, err := strconv.Atoi(input) // Преобразуем строку в число
+		a, err := strconv.Atoi(input)
 		if err != nil {
 			fmt.Println("Некорректный ввод! Пожалуйста, введите число.")
-			continue // Возвращаемся в начало цикла
+			continue
 		}
-		if a == 0 {
-			break
-		} else if a == 1 {
+
+		switch a {
+		case 0:
+			return
+		case 1:
 			print_all(all_students)
-		} else if a == 2 {
+		case 2:
 			record(&all_students, reader)
-		} else if a == 3 {
+		case 3:
 			sort_by_grades(all_students)
-		} else if a == 4 {
+		case 4:
 			sort_by_stipend(all_students)
-		} else if a == 5 {
-			save_to_file(all_students)
+		case 5:
+			if err := save_to_file(all_students); err != nil {
+				fmt.Println("Не удалось сохранить:", err)
+			}
+		default:
+			fmt.Println("Нет такого пункта меню!")
 		}
 	}
 }
