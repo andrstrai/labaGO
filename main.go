@@ -131,6 +131,41 @@ func sort_by_stipend(students_list []students) {
 	fmt.Println("Данные отсортированы!")
 }
 
+// функция, которая возвращает студентов указанного института
+func filter_by_institute(students_list []students, inst string) []students {
+	result := []students{}
+	for _, st := range students_list {
+		if strings.EqualFold(st.institute, inst) {
+			result = append(result, st)
+		}
+	}
+	return result
+}
+
+// функция для подсчёта средней стипендии
+func average_stipend(students_list []students) float64 {
+	if len(students_list) == 0 {
+		return 0
+	}
+	sum := 0.0
+	for _, st := range students_list {
+		sum += st.stipend
+	}
+	return sum / float64(len(students_list))
+}
+
+// функция, которая возвращает студентов со стипендией выше средней
+func filter_stipend_above_average(students_list []students) []students {
+	avg := average_stipend(students_list)
+	result := []students{}
+	for _, st := range students_list {
+		if st.stipend > avg {
+			result = append(result, st)
+		}
+	}
+	return result
+}
+
 // функция для вывода студентов списком
 func print_all(student []students) {
 	for i := 0; i < len(student); i++ {
@@ -233,6 +268,8 @@ func main() {
 		fmt.Println("3 - Сортировать студентов по среднему баллу (по убыванию)")
 		fmt.Println("4 - Сортировать студентов по размеру стипендии (по убыванию)")
 		fmt.Println("5 - Сохранить изменения в файл")
+		fmt.Println("6 - Показать студентов выбранного института")
+		fmt.Println("7 - Показать студентов со стипендией выше средней")
 		fmt.Println("0 - Завершить работу")
 		fmt.Println("Выберите пункт из меню управления: ")
 
@@ -257,9 +294,15 @@ func main() {
 		case 4:
 			sort_by_stipend(all_students)
 		case 5:
-			if err := save_to_file(all_students); err != nil {
-				fmt.Println("Не удалось сохранить:", err)
-			}
+			save_to_file(all_students)
+		case 6:
+			fmt.Print("Введите институт: ")
+			inst, _ := reader.ReadString('\n')
+			inst = strings.TrimSpace(inst)
+			print_all(filter_by_institute(all_students, inst))
+		case 7:
+			fmt.Printf("Средняя стипендия: %.2f\n", average_stipend(all_students))
+			print_all(filter_stipend_above_average(all_students))
 		default:
 			fmt.Println("Нет такого пункта меню!")
 		}
