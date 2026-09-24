@@ -10,6 +10,7 @@ import (
 )
 
 type students struct {
+	ID           int
 	name         string
 	databirthday string
 	institute    string
@@ -19,15 +20,27 @@ type students struct {
 
 // метод для вывода красивой строки стуктуры
 func (st students) ToString() string {
-	return fmt.Sprintf("Имя студента: %s\nДата рождения: %s\n"+
+	return fmt.Sprintf("ID студента: %d\nИмя студента: %s\nДата рождения: %s\n"+
 		"Институт: %s\nСтипендия: %f\nСредний балл: %f",
-		st.name, st.databirthday, st.institute, st.stipend, st.GPA)
+		st.ID, st.name, st.databirthday, st.institute, st.stipend, st.GPA)
+}
+
+// функция для генерации id
+func max_id(students_list []students) int {
+	if len(students_list) == 0 {
+		return 0
+	}
+	max := slices.MaxFunc(students_list, func(a, b students) int {
+		return a.ID - b.ID
+	})
+	return max.ID
 }
 
 // функция добавления студента в слайс
 func record(student *[]students) {
 	var name, data, inst string
 	var sti, GPA float64
+	id := max_id(*student) + 1
 	fmt.Println("Укажите имя студента: ")
 	fmt.Scan(&name)
 	fmt.Println("Укажите дату рождения студента: ")
@@ -38,17 +51,13 @@ func record(student *[]students) {
 	fmt.Scan(&sti)
 	fmt.Println("Укажите средний балл студента: ")
 	fmt.Scan(&GPA)
-	info := []byte(name + "/" + data + "/" + inst + "/" + fmt.Sprint(sti) + "/" + fmt.Sprint(GPA))
+	info := []byte(fmt.Sprint(id) + "/" + name + "/" + data + "/" + inst + "/" + fmt.Sprint(sti) + "/" + fmt.Sprint(GPA))
 	f, e := os.OpenFile("Base.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	*student = append(*student, students{name, data, inst, sti, GPA})
+	*student = append(*student, students{id, name, data, inst, sti, GPA})
 	if e != nil {
 		fmt.Println("Ошибка чтения")
 	}
-	if len("Base.txt") == 0 {
-		f.WriteString(string(info))
-	} else {
-		f.WriteString("\n" + string(info))
-	}
+	f.WriteString(string(info) + "\n")
 }
 
 // функция, которая сортирует слайс студентов по среднему баллу по убыванию
@@ -106,8 +115,8 @@ func save_to_file(students_list []students) error {
 
 	w := bufio.NewWriter(f)
 	for _, student := range students_list {
-		fmt.Fprintf(w, "%s/%s/%s/%f/%f\n",
-			student.name, student.databirthday, student.institute, student.stipend, student.GPA)
+		fmt.Fprintf(w, "%d/%s/%s/%s/%f/%f\n",
+			student.ID, student.name, student.databirthday, student.institute, student.stipend, student.GPA)
 	}
 	fmt.Println("Изменения сохранены!")
 	return w.Flush()
@@ -136,13 +145,14 @@ func main() {
 	}
 	for _, line := range lines {
 		line := strings.Split(line, "/")
-		sti, err := strconv.ParseFloat(line[3], 64)
-		gpa, err := strconv.ParseFloat(line[4], 64)
-		if err != nil {
+		id, err1 := strconv.ParseInt(line[0], 10, 0)
+		sti, err2 := strconv.ParseFloat(line[4], 64)
+		gpa, err3 := strconv.ParseFloat(line[5], 64)
+		if err1 != nil || err2 != nil || err3 != nil {
 			fmt.Println("Ошибка чтения данных!", err)
 			return
 		}
-		all_students = append(all_students, students{line[0], line[1], line[2], sti, gpa})
+		all_students = append(all_students, students{int(id), line[1], line[2], line[3], sti, gpa})
 	}
 
 	for {
