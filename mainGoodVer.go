@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"cmp"
 	"fmt"
 	"os"
 	"slices"
@@ -31,7 +32,7 @@ func max_id(students_list []students) int {
 		return 0
 	}
 	max := slices.MaxFunc(students_list, func(a, b students) int {
-		return a.ID - b.ID
+		return cmp.Compare(a.ID, b.ID)
 	})
 	return max.ID
 }
