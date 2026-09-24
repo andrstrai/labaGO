@@ -24,7 +24,7 @@ type students struct {
 // метод для вывода красивой строки стуктуры
 func (st students) ToString() string {
 	return fmt.Sprintf("ID студента: %d\nИмя студента: %s\nДата рождения: %s\n"+
-		"Институт: %s\nСтипендия: %f\nСредний балл: %f",
+		"Институт: %s\nСтипендия: %.2f\nСредний балл: %.2f",
 		st.ID, st.name, st.databirthday, st.institute, st.stipend, st.GPA)
 }
 
@@ -89,14 +89,15 @@ func record(student *[]students, reader *bufio.Reader) {
 		GPA, err = strconv.ParseFloat(gpaStr, 64)
 	}
 
-	info := []byte(fmt.Sprint(id) + "/" + name + "/" + data + "/" + inst + "/" + fmt.Sprint(sti) + "/" + fmt.Sprint(GPA))
-	f, e := os.OpenFile("Base.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	*student = append(*student, students{id, name, data, inst, sti, GPA})
-	if e != nil {
-		fmt.Println("Ошибка чтения")
+
+	f, err := os.OpenFile("Base.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println("Ошибка записи в файл:", err)
+		return
 	}
 	defer f.Close()
-	f.WriteString(string(info) + "\n")
+	fmt.Fprintf(f, "%d/%s/%s/%s/%.2f/%.2f\n", id, name, data, inst, sti, GPA)
 }
 
 // функция, которая сортирует слайс студентов по среднему баллу по убыванию
@@ -156,11 +157,15 @@ func save_to_file(students_list []students) error {
 
 	w := bufio.NewWriter(f)
 	for _, student := range students_list {
-		fmt.Fprintf(w, "%d/%s/%s/%s/%f/%f\n",
+		fmt.Fprintf(w, "%d/%s/%s/%s/%.2f/%.2f\n",
 			student.ID, student.name, student.databirthday, student.institute, student.stipend, student.GPA)
 	}
+	if err := w.Flush(); err != nil {
+		fmt.Println("Ошибка записи!")
+		return err
+	}
 	fmt.Println("Изменения сохранены!")
-	return w.Flush()
+	return nil
 }
 
 // основная функция
