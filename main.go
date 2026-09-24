@@ -57,9 +57,10 @@ func record(student *[]students, reader *bufio.Reader) {
 	fmt.Print("Укажите дату рождения студента в формате ДД.ММ.ГГГГ: ")
 	data, _ := reader.ReadString('\n')
 	data = strings.TrimSpace(data)
-	if !is_valid_date(data) {
-		fmt.Println("Ошибка ввода даты. Установлено значение 01.01.2000")
-		data = "01.01.2000"
+	for !is_valid_date(data) {
+		fmt.Print("Ошибка ввода даты. Введите еще раз (ДД.ММ.ГГГГ): ")
+		data, _ = reader.ReadString('\n')
+		data = strings.TrimSpace(data)
 	}
 
 	fmt.Print("Укажите институт студента: ")
