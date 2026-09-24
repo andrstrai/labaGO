@@ -148,19 +148,25 @@ func print_all(student []students) {
 
 // функция для сохранения измененнного слайса в файл
 func save_to_file(students_list []students) error {
-	f, err := os.OpenFile("Base.txt", os.O_WRONLY|os.O_TRUNC, 0644)
+	f, err := os.Create("Base.tmp")
 	if err != nil {
 		fmt.Println("Ошибка записи!")
 		return err
 	}
-	defer f.Close()
-
 	w := bufio.NewWriter(f)
 	for _, student := range students_list {
 		fmt.Fprintf(w, "%d/%s/%s/%s/%.2f/%.2f\n",
 			student.ID, student.name, student.databirthday, student.institute, student.stipend, student.GPA)
 	}
 	if err := w.Flush(); err != nil {
+		f.Close()
+		os.Remove("Base.tmp")
+		fmt.Println("Ошибка записи!")
+		return err
+	}
+	f.Close()
+	if err := os.Rename("Base.tmp", "Base.txt"); err != nil {
+		os.Remove("Base.tmp")
 		fmt.Println("Ошибка записи!")
 		return err
 	}
@@ -245,16 +251,3 @@ func main() {
 		}
 	}
 }
-
-/*
-9/слияние/69/апап/676767.000000/31.000000
-1/Алексей/27.06.2002/ИБСИБ/5000.000000/0.000000
-2/Алексей/20.09.1999/ГИ/3500.000000/4.500000
-3/Антон/2321/кнкн/3333.000000/5.000000
-4/Андрей/123/ИКНК/2333.000000/1.300000
-5/привет/5454/привет/67.000000/67.000000
-6/коваль/27.062/икнк/12.000000/0.300000
-7/тест_айди/длдллд/длдллд/5.000000/4.000000
-88/aasdasdsadasdasd/0/0/0.000000/0.000000
-89/аппа/апп/апп/5/5
-*/
