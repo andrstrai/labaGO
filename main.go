@@ -71,18 +71,22 @@ func record(student *[]students, reader *bufio.Reader) {
 	stiStr, _ := reader.ReadString('\n')
 	stiStr = strings.TrimSpace(stiStr)
 	sti, err := strconv.ParseFloat(stiStr, 64)
-	if err != nil {
-		fmt.Println("Ошибка ввода стипендии. Установлено значение 0.")
-		sti = 0
+	for err != nil || sti < 0 {
+		fmt.Print("Ошибка ввода стипендии. Введите еще раз неотрицательное число: ")
+		stiStr, _ = reader.ReadString('\n')
+		stiStr = strings.TrimSpace(stiStr)
+		sti, err = strconv.ParseFloat(stiStr, 64)
 	}
 
 	fmt.Print("Укажите средний балл студента: ")
 	gpaStr, _ := reader.ReadString('\n')
 	gpaStr = strings.TrimSpace(gpaStr)
 	GPA, err := strconv.ParseFloat(gpaStr, 64)
-	if err != nil {
-		fmt.Println("Ошибка ввода среднего балла. Установлено значение 0.")
-		GPA = 0
+	for err != nil || GPA < 2 || GPA > 5 {
+		fmt.Print("Ошибка ввода среднего балла. Введите число от 2 до 5: ")
+		gpaStr, _ = reader.ReadString('\n')
+		gpaStr = strings.TrimSpace(gpaStr)
+		GPA, err = strconv.ParseFloat(gpaStr, 64)
 	}
 
 	info := []byte(fmt.Sprint(id) + "/" + name + "/" + data + "/" + inst + "/" + fmt.Sprint(sti) + "/" + fmt.Sprint(GPA))
