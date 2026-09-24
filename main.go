@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type students struct {
@@ -38,6 +39,13 @@ func max_id(students_list []students) int {
 	return max.ID
 }
 
+// Проверка строки на соответствие шаблону даты
+func is_valid_date(dateStr string) bool {
+	// Шаблон: 02 - день, 01 - месяц, 2006 - год
+	_, err := time.Parse("2.1.2006", dateStr)
+	return err == nil
+}
+
 // функция добавления студента в срез
 func record(student *[]students, reader *bufio.Reader) {
 	id := max_id(*student) + 1
@@ -46,9 +54,13 @@ func record(student *[]students, reader *bufio.Reader) {
 	name, _ := reader.ReadString('\n')
 	name = strings.TrimSpace(name) // Удаляем символ переноса строки
 
-	fmt.Print("Укажите дату рождения студента: ")
+	fmt.Print("Укажите дату рождения студента в формате ДД.ММ.ГГГГ: ")
 	data, _ := reader.ReadString('\n')
 	data = strings.TrimSpace(data)
+	if !is_valid_date(data) {
+		fmt.Println("Ошибка ввода даты. Установлено значение 01.01.2000")
+		data = "01.01.2000"
+	}
 
 	fmt.Print("Укажите институт студента: ")
 	inst, _ := reader.ReadString('\n')
