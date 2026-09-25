@@ -14,12 +14,12 @@ import (
 )
 
 type students struct {
-	ID           int
+	ID           uint
 	name         string
 	databirthday string
 	institute    string
-	stipend      float64
-	GPA          float64
+	stipend      float32
+	GPA          float32
 }
 
 // метод для вывода красивой строки стуктуры
@@ -30,7 +30,7 @@ func (st students) ToString() string {
 }
 
 // функция для генерации id
-func max_id(students_list []students) int {
+func max_id(students_list []students) uint {
 	if len(students_list) == 0 {
 		return 0
 	}
@@ -71,26 +71,26 @@ func record(student *[]students, reader *bufio.Reader) {
 	fmt.Print("Укажите стипендию студента: ")
 	stiStr, _ := reader.ReadString('\n')
 	stiStr = strings.TrimSpace(stiStr)
-	sti, err := strconv.ParseFloat(stiStr, 64)
+	sti, err := strconv.ParseFloat(stiStr, 32)
 	for err != nil || sti < 0 {
 		fmt.Print("Ошибка ввода стипендии. Введите еще раз неотрицательное число: ")
 		stiStr, _ = reader.ReadString('\n')
 		stiStr = strings.TrimSpace(stiStr)
-		sti, err = strconv.ParseFloat(stiStr, 64)
+		sti, err = strconv.ParseFloat(stiStr, 32)
 	}
-
+	STI := float32(sti)
 	fmt.Print("Укажите средний балл студента: ")
 	gpaStr, _ := reader.ReadString('\n')
 	gpaStr = strings.TrimSpace(gpaStr)
-	GPA, err := strconv.ParseFloat(gpaStr, 64)
-	for err != nil || GPA < 2 || GPA > 5 {
+	gpa, err := strconv.ParseFloat(gpaStr, 32)
+	for err != nil || gpa < 2 || gpa > 5 {
 		fmt.Print("Ошибка ввода среднего балла. Введите число от 2 до 5: ")
 		gpaStr, _ = reader.ReadString('\n')
 		gpaStr = strings.TrimSpace(gpaStr)
-		GPA, err = strconv.ParseFloat(gpaStr, 64)
+		gpa, err = strconv.ParseFloat(gpaStr, 32)
 	}
-
-	*student = append(*student, students{id, name, data, inst, sti, GPA})
+	GPA := float32(gpa)
+	*student = append(*student, students{id, name, data, inst, STI, GPA})
 
 	f, err := os.OpenFile("Base.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
@@ -143,15 +143,15 @@ func filter_by_institute(students_list []students, inst string) []students {
 }
 
 // функция для подсчёта средней стипендии
-func average_stipend(students_list []students) float64 {
+func average_stipend(students_list []students) float32 {
 	if len(students_list) == 0 {
 		return 0
 	}
-	sum := 0.0
+	sum := float32(0.0)
 	for _, st := range students_list {
 		sum += st.stipend
 	}
-	return sum / float64(len(students_list))
+	return sum / float32(len(students_list))
 }
 
 // функция, которая возвращает студентов со стипендией выше средней
@@ -242,13 +242,15 @@ func main() {
 				continue
 			}
 			id, err1 := strconv.Atoi(fields[0])
-			sti, err2 := strconv.ParseFloat(fields[4], 64)
-			gpa, err3 := strconv.ParseFloat(fields[5], 64)
+			sti, err2 := strconv.ParseFloat(fields[4], 32)
+			gpa, err3 := strconv.ParseFloat(fields[5], 32)
 			if err1 != nil || err2 != nil || err3 != nil {
 				fmt.Println("Пропущена некорректная строка:", scanner.Text())
 				continue
 			}
-			all_students = append(all_students, students{id, fields[1], fields[2], fields[3], sti, gpa})
+			STI := float32(sti)
+			GPA := float32(gpa)
+			all_students = append(all_students, students{uint(id), fields[1], fields[2], fields[3], STI, GPA})
 		}
 		if err := scanner.Err(); err != nil {
 			fmt.Println("Ошибка чтения:", err)
