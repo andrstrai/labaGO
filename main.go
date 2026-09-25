@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"slices"
 	"strconv"
 	"strings"
@@ -24,7 +25,7 @@ type students struct {
 // метод для вывода красивой строки стуктуры
 func (st students) ToString() string {
 	return fmt.Sprintf("ID студента: %d\nИмя студента: %s\nДата рождения: %s\n"+
-		"Институт: %s\nСтипендия: %f\nСредний балл: %f",
+		"Институт: %s\nСтипендия: %.2f\nСредний балл: %.2f",
 		st.ID, st.name, st.databirthday, st.institute, st.stipend, st.GPA)
 }
 
@@ -57,9 +58,10 @@ func record(student *[]students, reader *bufio.Reader) {
 	fmt.Print("Укажите дату рождения студента в формате ДД.ММ.ГГГГ: ")
 	data, _ := reader.ReadString('\n')
 	data = strings.TrimSpace(data)
-	if !is_valid_date(data) {
-		fmt.Println("Ошибка ввода даты. Установлено значение 01.01.2000")
-		data = "01.01.2000"
+	for !is_valid_date(data) {
+		fmt.Print("Ошибка ввода даты. Введите еще раз (ДД.ММ.ГГГГ): ")
+		data, _ = reader.ReadString('\n')
+		data = strings.TrimSpace(data)
 	}
 
 	fmt.Print("Укажите институт студента: ")
@@ -70,28 +72,33 @@ func record(student *[]students, reader *bufio.Reader) {
 	stiStr, _ := reader.ReadString('\n')
 	stiStr = strings.TrimSpace(stiStr)
 	sti, err := strconv.ParseFloat(stiStr, 64)
-	if err != nil {
-		fmt.Println("Ошибка ввода стипендии. Установлено значение 0.")
-		sti = 0
+	for err != nil || sti < 0 {
+		fmt.Print("Ошибка ввода стипендии. Введите еще раз неотрицательное число: ")
+		stiStr, _ = reader.ReadString('\n')
+		stiStr = strings.TrimSpace(stiStr)
+		sti, err = strconv.ParseFloat(stiStr, 64)
 	}
 
 	fmt.Print("Укажите средний балл студента: ")
 	gpaStr, _ := reader.ReadString('\n')
 	gpaStr = strings.TrimSpace(gpaStr)
 	GPA, err := strconv.ParseFloat(gpaStr, 64)
-	if err != nil {
-		fmt.Println("Ошибка ввода среднего балла. Установлено значение 0.")
-		GPA = 0
+	for err != nil || GPA < 2 || GPA > 5 {
+		fmt.Print("Ошибка ввода среднего балла. Введите число от 2 до 5: ")
+		gpaStr, _ = reader.ReadString('\n')
+		gpaStr = strings.TrimSpace(gpaStr)
+		GPA, err = strconv.ParseFloat(gpaStr, 64)
 	}
 
-	info := []byte(fmt.Sprint(id) + "/" + name + "/" + data + "/" + inst + "/" + fmt.Sprint(sti) + "/" + fmt.Sprint(GPA))
-	f, e := os.OpenFile("Base.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	*student = append(*student, students{id, name, data, inst, sti, GPA})
-	if e != nil {
-		fmt.Println("Ошибка чтения")
+
+	f, err := os.OpenFile("Base.txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println("Ошибка записи в файл:", err)
+		return
 	}
 	defer f.Close()
-	f.WriteString(string(info) + "\n")
+	fmt.Fprintf(f, "%d/%s/%s/%s/%.2f/%.2f\n", id, name, data, inst, sti, GPA)
 }
 
 // функция, которая сортирует слайс студентов по среднему баллу по убыванию
@@ -124,6 +131,41 @@ func sort_by_stipend(students_list []students) {
 	fmt.Println("Данные отсортированы!")
 }
 
+// функция, которая возвращает студентов указанного института
+func filter_by_institute(students_list []students, inst string) []students {
+	result := []students{}
+	for _, st := range students_list {
+		if strings.EqualFold(st.institute, inst) {
+			result = append(result, st)
+		}
+	}
+	return result
+}
+
+// функция для подсчёта средней стипендии
+func average_stipend(students_list []students) float64 {
+	if len(students_list) == 0 {
+		return 0
+	}
+	sum := 0.0
+	for _, st := range students_list {
+		sum += st.stipend
+	}
+	return sum / float64(len(students_list))
+}
+
+// функция, которая возвращает студентов со стипендией выше средней
+func filter_stipend_above_average(students_list []students) []students {
+	avg := average_stipend(students_list)
+	result := []students{}
+	for _, st := range students_list {
+		if st.stipend > avg {
+			result = append(result, st)
+		}
+	}
+	return result
+}
+
 // функция для вывода студентов списком
 func print_all(student []students) {
 	for i := 0; i < len(student); i++ {
@@ -142,66 +184,83 @@ func print_all(student []students) {
 
 // функция для сохранения измененнного слайса в файл
 func save_to_file(students_list []students) error {
-	f, err := os.OpenFile("Base.txt", os.O_WRONLY|os.O_TRUNC, 0644)
+	f, err := os.Create("Base.tmp")
 	if err != nil {
 		fmt.Println("Ошибка записи!")
 		return err
 	}
-	defer f.Close()
-
 	w := bufio.NewWriter(f)
 	for _, student := range students_list {
-		fmt.Fprintf(w, "%d/%s/%s/%s/%f/%f\n",
+		fmt.Fprintf(w, "%d/%s/%s/%s/%.2f/%.2f\n",
 			student.ID, student.name, student.databirthday, student.institute, student.stipend, student.GPA)
 	}
+	if err := w.Flush(); err != nil {
+		f.Close()
+		os.Remove("Base.tmp")
+		fmt.Println("Ошибка записи!")
+		return err
+	}
+	f.Close()
+	if err := os.Rename("Base.tmp", "Base.txt"); err != nil {
+		os.Remove("Base.tmp")
+		fmt.Println("Ошибка записи!")
+		return err
+	}
 	fmt.Println("Изменения сохранены!")
-	return w.Flush()
+	return nil
+}
+
+// функция для очистки экрана (работает и на Windows, и на macOS/Linux)
+func clear_screen() {
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/c", "cls")
+	} else {
+		cmd = exec.Command("clear")
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Run()
 }
 
 // основная функция
 func main() {
-
 	all_students := []students{}
 
 	file, err := os.Open("Base.txt")
 	if err != nil {
-		os.Create("Base.txt")
+		f, err := os.Create("Base.txt")
+		if err != nil {
+			fmt.Println("Не удалось создать файл:", err)
+			return
+		}
+		f.Close()
 	} else {
-		var lines []string
 		scanner := bufio.NewScanner(file)
 		for scanner.Scan() {
-			lines = append(lines, scanner.Text())
+			fields := strings.Split(scanner.Text(), "/")
+			if len(fields) < 6 {
+				continue
+			}
+			id, err1 := strconv.Atoi(fields[0])
+			sti, err2 := strconv.ParseFloat(fields[4], 64)
+			gpa, err3 := strconv.ParseFloat(fields[5], 64)
+			if err1 != nil || err2 != nil || err3 != nil {
+				fmt.Println("Пропущена некорректная строка:", scanner.Text())
+				continue
+			}
+			all_students = append(all_students, students{id, fields[1], fields[2], fields[3], sti, gpa})
 		}
-
 		if err := scanner.Err(); err != nil {
 			fmt.Println("Ошибка чтения:", err)
 		}
-		for _, line := range lines {
-			line := strings.Split(line, "/")
-			if len(line) < 5 {
-				continue
-			} else {
-				id, err := strconv.ParseInt(line[0], 10, 0)
-				sti, err := strconv.ParseFloat(line[4], 64)
-				gpa, err := strconv.ParseFloat(line[5], 64)
-				if err != nil {
-					fmt.Println("Ошибка чтения данных!", err)
-					return
-				}
-				all_students = append(all_students, students{int(id), line[1], line[2], line[3], sti, gpa})
-			}
-		}
+		file.Close()
 	}
 
-	defer file.Close()
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Println("Для начала работы пожалуйста, нажмите Enter...")
 		reader.ReadString('\n')
-
-		cmd := exec.Command("cmd", "/c", "cls")
-		cmd.Stdout = os.Stdout
-		cmd.Run()
+		clear_screen()
 
 		fmt.Println("Меню команд:")
 		fmt.Println("1 - Показать список всех студентов")
@@ -209,42 +268,43 @@ func main() {
 		fmt.Println("3 - Сортировать студентов по среднему баллу (по убыванию)")
 		fmt.Println("4 - Сортировать студентов по размеру стипендии (по убыванию)")
 		fmt.Println("5 - Сохранить изменения в файл")
+		fmt.Println("6 - Показать студентов выбранного института")
+		fmt.Println("7 - Показать студентов со стипендией выше средней")
 		fmt.Println("0 - Завершить работу")
 		fmt.Println("Выберите пункт из меню управления: ")
 
 		input, _ := reader.ReadString('\n')
-		input = strings.TrimSpace(input) // Убираем \n и пробелы
+		input = strings.TrimSpace(input)
 
-		a, err := strconv.Atoi(input) // Преобразуем строку в число
+		a, err := strconv.Atoi(input)
 		if err != nil {
 			fmt.Println("Некорректный ввод! Пожалуйста, введите число.")
-			continue // Возвращаемся в начало цикла
+			continue
 		}
-		if a == 0 {
-			break
-		} else if a == 1 {
+
+		switch a {
+		case 0:
+			return
+		case 1:
 			print_all(all_students)
-		} else if a == 2 {
+		case 2:
 			record(&all_students, reader)
-		} else if a == 3 {
+		case 3:
 			sort_by_grades(all_students)
-		} else if a == 4 {
+		case 4:
 			sort_by_stipend(all_students)
-		} else if a == 5 {
+		case 5:
 			save_to_file(all_students)
+		case 6:
+			fmt.Print("Введите институт: ")
+			inst, _ := reader.ReadString('\n')
+			inst = strings.TrimSpace(inst)
+			print_all(filter_by_institute(all_students, inst))
+		case 7:
+			fmt.Printf("Средняя стипендия: %.2f\n", average_stipend(all_students))
+			print_all(filter_stipend_above_average(all_students))
+		default:
+			fmt.Println("Нет такого пункта меню!")
 		}
 	}
 }
-
-/*
-9/слияние/69/апап/676767.000000/31.000000
-1/Алексей/27.06.2002/ИБСИБ/5000.000000/0.000000
-2/Алексей/20.09.1999/ГИ/3500.000000/4.500000
-3/Антон/2321/кнкн/3333.000000/5.000000
-4/Андрей/123/ИКНК/2333.000000/1.300000
-5/привет/5454/привет/67.000000/67.000000
-6/коваль/27.062/икнк/12.000000/0.300000
-7/тест_айди/длдллд/длдллд/5.000000/4.000000
-88/aasdasdsadasdasd/0/0/0.000000/0.000000
-89/аппа/апп/апп/5/5
-*/
